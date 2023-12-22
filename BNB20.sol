@@ -30,21 +30,19 @@ interface IERC20 {
 }
 
 contract EVM20 {
-    string public p; // BNB20
+    string public p; // EVM20
     string public op; // deploy
     string public tick; // tick name
     uint256 public max; // max supply
     uint256 public lim; // lim of hodler
-    uint256 public id; // id
+    uint256 public id; // inscription id
 
-    // WBNB/WBNB...
-    IERC20 public WBNB;
-    // mint users
-    address[] users;
+    address[] minters;
 
     // address => lim number
     mapping(address => uint256) LIMbalance;
-    // address => uint[] number
+    // single holder for multiple inscriptions
+    // address => [ids]
     mapping(address => uint256[]) IDblance;
     // valid user
     mapping(address => bool) isValidUser;
@@ -67,14 +65,12 @@ contract EVM20 {
     );
 
     constructor() {
-        p = "BNB-20"; // default p
-        op = "deploy"; // default op
-        tick = "INSCRIPTION_NAME"; // inscription name
+        p = "EVM-20";
+        op = "deploy";
+        tick = "TOKEN_NAME";
         max = 21000000;
         lim = 1000;
         id = 0;
-
-        WBNB = IERC20(address(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c));
     }
 
     function mint(
@@ -84,46 +80,43 @@ contract EVM20 {
         if (id >= (max / lim)) revert("Mint has ended");
         if (_to != msg.sender) revert("Mint has User");
 
-        bool success = WBNB.transfer(_to, 0);
-
-        id += 1; //Every casting will make id+1
         LIMbalance[msg.sender] += lim; //Increase holdings
         IDblance[msg.sender].push(id); //Increase the number of IDs held
 
         if (!isValidUser[msg.sender]) {
             isValidUser[msg.sender] = true;
-            users.push(msg.sender);
+            minters.push(msg.sender);
         }
 
-        emit EVMmint("bnb-20", "mint", tick, id, lim, _inscription);
-        return success;
+        id += 1;
+
+        emit EVMmint("EVM-20", "mint", tick, id, lim, _inscription);
+        return true;
     }
 
     function transfer(
         address _to,
         string calldata _inscription
     ) external returns (bool) {
-        // The transfer address cannot be empty
-        if (_to == address(0)) revert("The address cannot be empty");
-        // The quantity owned must meet the minimum quantity of lim
-        if (LIMbalance[msg.sender] < lim) revert("The balance cannot be 0");
+        if (_to == address(0)) revert("can not transfer to zero address");
+        if (LIMbalance[msg.sender] < lim)
+            revert("You do not own any inscription");
 
-        bool success = WBNB.transfer(_to, 0);
+        LIMbalance[msg.sender] -= lim; // reduce amount inscriptions owned by sender
+        LIMbalance[_to] += lim; // increase amount inscriptions owned by recipients
 
-        LIMbalance[msg.sender] -= lim; //Reduced number of lims owned
-        LIMbalance[_to] += lim; //Increase in number of recipients
-
-        //Send the inscri[ption to the recipient
+        // transfer last inscription from sender to recipient
         uint256 _toID = IDblance[msg.sender][IDblance[msg.sender].length - 1];
         IDblance[_to].push(_toID);
 
-        emit EVMtransfer("bnb-20", "transfer", tick, id, lim, _inscription);
-        return success;
+        emit EVMtransfer("EVM-20", "transfer", tick, id, lim, _inscription);
+        return true;
     }
 
-    //Query lim balance ie. how many minting oppotunity left
-    function LIMbalanceOf(address _address) external view returns (uint256) {
-        return LIMbalance[_address];
+    // get how many inscriptions left to mint
+    function LIMbalanceOf() external view returns (uint256) {
+        uint256 inscriptions_left = lim - id;
+        return inscriptions_left;
     }
 
     // Query ID balance
@@ -133,7 +126,8 @@ contract EVM20 {
         return IDblance[_address];
     }
 
-    function usersOf() external view returns (address[] memory) {
-        return users;
+    // get minters
+    function get_minters() external view returns (address[] memory) {
+        return minters;
     }
 }
