@@ -1,4 +1,4 @@
-# BNB20 Contract + BRC20
+# EVM20 Contract 
 
 Playing with Inscriptions as Smart Contracts on BNB chain
 

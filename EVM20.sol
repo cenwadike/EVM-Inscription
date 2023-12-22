@@ -130,4 +130,6 @@ contract EVM20 {
     function get_minters() external view returns (address[] memory) {
         return minters;
     }
+
+    // get minters and their inscriptiom
 }
