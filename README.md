@@ -1,6 +1,6 @@
 # EVM20 Contract
 
-Playing with Inscriptions as Smart Contracts on BNB chain
+Playing with Inscriptions as Smart Contracts on EVM chains
 
 Spamming the blockchain network for the fun of it!!🔥🔥
 
