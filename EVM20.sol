@@ -1,34 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-interface IERC20 {
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 value
-    );
-
-    function totalSupply() external view returns (uint256);
-
-    function balanceOf(address account) external view returns (uint256);
-
-    function transfer(address to, uint256 amount) external returns (bool);
-
-    function allowance(
-        address owner,
-        address spender
-    ) external view returns (uint256);
-
-    function approve(address spender, uint256 amount) external returns (bool);
-
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) external returns (bool);
-}
-
 contract EVM20 {
     string public p; // EVM20
     string public op; // deploy
@@ -67,18 +39,14 @@ contract EVM20 {
     constructor() {
         p = "EVM-20";
         op = "deploy";
-        tick = "TOKEN_NAME";
+        tick = "TICK_NAME";
         max = 21000000;
         lim = 1000;
         id = 0;
     }
 
-    function mint(
-        address _to,
-        string calldata _inscription
-    ) external returns (bool) {
+    function mint(string calldata _inscription) external returns (bool) {
         if (id >= (max / lim)) revert("Mint has ended");
-        if (_to != msg.sender) revert("Mint has User");
 
         LIMbalance[msg.sender] += lim; //Increase holdings
         IDblance[msg.sender].push(id); //Increase the number of IDs held
@@ -131,5 +99,5 @@ contract EVM20 {
         return minters;
     }
 
-    // get minters and their inscriptiom
+    //TODO: get minters and their inscriptiom
 }

@@ -1,4 +1,4 @@
-# EVM20 Contract 
+# EVM20 Contract
 
 Playing with Inscriptions as Smart Contracts on BNB chain
 
@@ -7,47 +7,43 @@ Spamming the blockchain network for the fun of it!!🔥🔥
 ## mint function
 
 ```js
-    function mint(address _to, string calldata _inscription) external returns (bool) {
+    function mint(string calldata _inscription) external returns (bool) {
         if (id >= (max / lim)) revert("Mint has ended");
-        if (_to != msg.sender) revert("Mint has User");
 
-        bool success = WBNB.transfer(_to, 0);
-
-        id += 1; // guard minting
-
-        //Increase holdings
-        LIMbalance[msg.sender] += lim; 
-        IDblance[msg.sender].push(id);
+        LIMbalance[msg.sender] += lim; //Increase holdings
+        IDblance[msg.sender].push(id); //Increase the number of IDs held
 
         if (!isValidUser[msg.sender]) {
             isValidUser[msg.sender] = true;
-            users.push(msg.sender);
+            minters.push(msg.sender);
         }
 
-        emit EVMmint("bnb-20", "mint", tick, id, lim, _inscription);
-        return success;
+        id += 1;
+
+        emit EVMmint("EVM-20", "mint", tick, id, lim, _inscription);
+        return true;
     }
 ```
 
 ## transfer function
 
 ```js
-    function transfer(address _to, string calldata _inscription) external returns (bool) {
-        // The transfer address cannot be empty
-        if (_to == address(0)) revert("The address cannot be empty");
-        // The quantity owned must meet the minimum quantity of lim
-        if (LIMbalance[msg.sender] < lim) revert("The balance cannot be 0");
+    function transfer(
+        address _to,
+        string calldata _inscription
+    ) external returns (bool) {
+        if (_to == address(0)) revert("can not transfer to zero address");
+        if (LIMbalance[msg.sender] < lim)
+            revert("You do not own any inscription");
 
-        bool success = WBNB.transfer(_to, 0);
+        LIMbalance[msg.sender] -= lim; // reduce amount inscriptions owned by sender
+        LIMbalance[_to] += lim; // increase amount inscriptions owned by recipients
 
-        LIMbalance[msg.sender] -= lim; //Reduced number of lims owned
-        LIMbalance[_to] += lim; //Increase in number of recipients
+        // transfer last inscription from sender to recipient
+        uint256 _toID = IDblance[msg.sender][IDblance[msg.sender].length - 1];
+        IDblance[_to].push(_toID);
 
-        //Send the inscri[ption to the recipient
-        uint256 _toID = IDblance[msg.sender][IDblance[msg.sender].length - 1]; 
-        IDblance[_to].push(_toID); 
-
-        emit EVMtransfer("bnb-20", "transfer", tick, id, lim, _inscription); 
-        return success;
+        emit EVMtransfer("EVM-20", "transfer", tick, id, lim, _inscription);
+        return true;
     }
 ```
